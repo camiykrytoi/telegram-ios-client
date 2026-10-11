@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Telegram iOS Client for Android - Live Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=SF+Pro+Display:wght@400;500;600;700&family=SF+Pro+Text:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ios-blue: #007AFF;
+      --ios-blue-active: #0062CC;
+      --ios-bg-light: #F2F2F7;
+      --ios-header-light: rgba(246, 246, 246, 0.85);
+      --ios-bubble-in-light: #E9E9EB;
+      --ios-bubble-out-light: #007AFF;
+      --ios-text-in-light: #000000;
+      --ios-text-out-light: #FFFFFF;
+      --ios-time-in-light: rgba(0, 0, 0, 0.45);
+      --ios-time-out-light: rgba(255, 255, 255, 0.7);
+      --ios-input-bg-light: #FFFFFF;
+      --ios-border-light: rgba(60, 60, 67, 0.18);
+      
+      --ios-bg-dark: #000000;
+      --ios-header-dark: rgba(22, 22, 22, 0.85);
+      --ios-bubble-in-dark: #26252A;
+      --ios-bubble-out-dark: #007AFF;
+      --ios-text-in-dark: #FFFFFF;
+      --ios-text-out-dark: #FFFFFF;
+      --ios-time-in-dark: rgba(255, 255, 255, 0.45);
+      --ios-time-out-dark: rgba(255, 255, 255, 0.7);
+      --ios-input-bg-dark: #1C1C1E;
+      --ios-border-dark: rgba(255, 255, 255, 0.15);
+
+      /* Active theme defaults (light) */
+      --theme-bg: var(--ios-bg-light);
+      --theme-header: var(--ios-header-light);
+      --theme-bubble-in: var(--ios-bubble-in-light);
+      --theme-bubble-out: var(--ios-bubble-out-light);
+      --theme-text-in: var(--ios-text-in-light);
+      --theme-text-out: var(--ios-text-out-light);
+      --theme-time-in: var(--ios-time-in-light);
+      --theme-time-out: var(--ios-time-out-light);
+      --theme-input-bg: var(--ios-input-bg-light);
+      --theme-border: var(--ios-border-light);
+      --theme-status-text: #000000;
+    }
+
+    body.dark-mode {
+      --theme-bg: var(--ios-bg-dark);
+      --theme-header: var(--ios-header-dark);
+      --theme-bubble-in: var(--ios-bubble-in-dark);
+      --theme-bubble-out: var(--ios-bubble-out-dark);
+      --theme-text-in: var(--ios-text-in-dark);
+      --theme-text-out: var(--ios-text-out-dark);
+      --theme-time-in: var(--ios-time-in-dark);
+      --theme-time-out: var(--ios-time-out-dark);
+      --theme-input-bg: var(--ios-input-bg-dark);
+      --theme-border: var(--ios-border-dark);
+      --theme-status-text: #FFFFFF;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+      user-select: none;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+      background: #0D1117;
+      color: var(--theme-text-in);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      overflow: hidden;
+    }
+
+    /* Container */
+    .preview-wrapper {
+      display: flex;
+      gap: 32px;
+      align-items: center;
+      max-width: 1000px;
+      width: 100%;
+      padding: 24px;
+    }
+
+    .info-panel {
+      flex: 1;
+      color: #E6EDF3;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .info-panel h1 {
+      font-size: 28px;
+      font-weight: 700;
+      color: #58A6FF;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .badge-ios {
+      background: rgba(0, 122, 255, 0.15);
+      border: 1px solid #007AFF;
+      color: #007AFF;
+      font-size: 13px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-weight: 600;
+    }
+
+    .info-panel p {
+      font-size: 15px;
+      line-height: 1.6;
+      color: #8B949E;
+    }
+
+    .feature-list {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .feature-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      padding: 10px 14px;
+      border-radius: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .feature-icon {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #007AFF;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-size: 16px;
+      flex-shrink: 0;
+    }
+
+    .controls-panel {
+      display: flex;
+      gap: 12px;
+      margin-top: 8px;
+    }
+
+    .btn-toggle-theme {
+      background: #21262D;
+      border: 1px solid #30363D;
+      color: #F0F6FC;
+      padding: 10px 18px;
+      border-radius: 10px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: all 0.2s;
+    }
+
+    .btn-toggle-theme:hover {
+      background: #30363D;
+      border-color: #8B949E;
+    }
+
+    /* iPhone Device Frame */
+    .iphone-frame {
+      width: 390px;
+      height: 780px;
+      background: var(--theme-bg);
+      border-radius: 54px;
+      box-shadow: 0 0 0 12px #1F2328, 0 0 0 14px #30363D, 0 30px 60px rgba(0, 0, 0, 0.6);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      transition: background 0.3s;
+    }
+
+    /* Dynamic Island */
+    .dynamic-island {
+      position: absolute;
+      top: 11px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 116px;
+      height: 32px;
+      background: #000000;
+      border-radius: 20px;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+    }
+
+    .camera-lens {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #0a0a1a;
+      box-shadow: inset 0 0 2px #335588;
+    }
+
+    /* iOS Status Bar */
+    .status-bar {
+      height: 48px;
+      padding: 12px 24px 0 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--theme-status-text);
+      z-index: 90;
+      position: relative;
+    }
+
+    .status-icons {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    /* Navigation Header */
+    .ios-header {
+      height: 52px;
+      background: var(--theme-header);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-bottom: 0.5px solid var(--theme-border);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 12px;
+      z-index: 80;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .back-btn {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: var(--ios-blue);
+      font-size: 17px;
+      cursor: pointer;
+    }
+
+    .back-btn svg {
+      width: 22px;
+      height: 22px;
+      stroke-width: 2.5;
+    }
+
+    .back-counter {
+      background: var(--ios-blue);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 1px 6px;
+      border-radius: 12px;
+      margin-left: 2px;
+    }
+
+    .header-user {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      cursor: pointer;
+    }
+
+    .user-name {
+      font-size: 15px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .user-status {
+      font-size: 11px;
+      color: #34C759;
+      font-weight: 500;
+    }
+
+    .header-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #FF9500, #FF5E3A);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 15px;
+    }
+
+    /* Chat Canvas */
+    .chat-body {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      background-image: radial-gradient(rgba(0, 122, 255, 0.05) 1px, transparent 0);
+      background-size: 20px 20px;
+    }
+
+    .date-badge {
+      align-self: center;
+      background: rgba(120, 120, 128, 0.2);
+      backdrop-filter: blur(10px);
+      color: rgba(120, 120, 128, 0.9);
+      font-size: 12px;
+      font-weight: 600;
+      padding: 3px 12px;
+      border-radius: 14px;
+      margin: 6px 0;
+    }
+
+    body.dark-mode .date-badge {
+      background: rgba(255, 255, 255, 0.15);
+      color: rgba(255, 255, 255, 0.8);
+    }
+
+    /* iOS Message Bubbles */
+    .msg-row {
+      display: flex;
+      flex-direction: column;
+      max-width: 78%;
+      animation: springFade 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+
+    @keyframes springFade {
+      0% {
+        opacity: 0;
+        transform: translateY(12px) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    .msg-row.out {
+      align-self: flex-end;
+    }
+
+    .msg-row.in {
+      align-self: flex-start;
+    }
+
+    .msg-bubble {
+      padding: 8px 12px;
+      font-size: 15.5px;
+      line-height: 1.35;
+      position: relative;
+      word-wrap: break-word;
+      transition: background 0.3s;
+    }
+
+    /* Authentic iOS corner radii */
+    .msg-row.out .msg-bubble {
+      background: var(--theme-bubble-out);
+      color: var(--theme-text-out);
+      border-radius: 18px 18px 4px 18px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    }
+
+    .msg-row.in .msg-bubble {
+      background: var(--theme-bubble-in);
+      color: var(--theme-text-in);
+      border-radius: 18px 18px 18px 4px;
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .msg-meta {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 4px;
+      font-size: 11px;
+      margin-top: 3px;
+      float: right;
+      margin-left: 8px;
+    }
+
+    .msg-row.out .msg-meta {
+      color: var(--theme-time-out);
+    }
+
+    .msg-row.in .msg-meta {
+      color: var(--theme-time-in);
+    }
+
+    .checks-icon {
+      display: inline-flex;
+      align-items: center;
+    }
+
+    .checks-icon svg {
+      width: 15px;
+      height: 11px;
+      stroke: currentColor;
+    }
+
+    /* iOS Reaction Pill */
+    .reaction-pill {
+      background: rgba(255, 255, 255, 0.9);
+      border: 0.5px solid rgba(0, 0, 0, 0.1);
+      box-shadow: 0 2px 5px rgba(0, 0, 0, 0.12);
+      border-radius: 14px;
+      padding: 2px 7px;
+      font-size: 13px;
+      display: inline-flex;
+      align-items: center;
+      gap: 3px;
+      align-self: flex-end;
+      margin-top: -6px;
+      margin-right: 8px;
+      z-index: 5;
+    }
+
+    body.dark-mode .reaction-pill {
+      background: #2C2C2E;
+      border-color: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+
+    /* Bottom Input Bar */
+    .ios-input-bar {
+      min-height: 54px;
+      background: var(--theme-header);
+      backdrop-filter: blur(25px);
+      -webkit-backdrop-filter: blur(25px);
+      border-top: 0.5px solid var(--theme-border);
+      display: flex;
+      align-items: center;
+      padding: 8px 12px 24px 12px;
+      gap: 8px;
+      position: relative;
+      transition: background 0.3s;
+    }
+
+    .btn-attach {
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: transparent;
+      color: var(--ios-blue);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .btn-attach svg {
+      width: 26px;
+      height: 26px;
+    }
+
+    .input-field-wrapper {
+      flex: 1;
+      background: var(--theme-input-bg);
+      border: 0.5px solid var(--theme-border);
+      border-radius: 20px;
+      padding: 7px 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: background 0.3s, border-color 0.3s;
+    }
+
+    .chat-input {
+      flex: 1;
+      border: none;
+      outline: none;
+      background: transparent;
+      font-size: 16px;
+      color: var(--theme-text-in);
+      font-family: inherit;
+      user-select: text;
+    }
+
+    .chat-input::placeholder {
+      color: #8E8E93;
+    }
+
+    .btn-stickers {
+      background: transparent;
+      border: none;
+      color: #8E8E93;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    /* THE SIGNATURE iOS BLUE SEND BUTTON WITH WHITE ARROW UP */
+    .btn-send-ios {
+      width: 33px;
+      height: 33px;
+      border-radius: 50%;
+      background: var(--ios-blue);
+      border: none;
+      outline: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      box-shadow: 0 2px 6px rgba(0, 122, 255, 0.35);
+      transition: transform 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275), background-color 0.2s, opacity 0.2s;
+      flex-shrink: 0;
+    }
+
+    .btn-send-ios:active {
+      transform: scale(0.88);
+      background: var(--ios-blue-active);
+    }
+
+    .btn-send-ios.voice-mode {
+      background: transparent;
+      box-shadow: none;
+      color: var(--ios-blue);
+    }
+
+    .btn-send-ios svg {
+      width: 17px;
+      height: 17px;
+      fill: none;
+      stroke: white;
+      stroke-width: 2.4;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      transition: transform 0.2s;
+    }
+
+    .home-indicator {
+      position: absolute;
+      bottom: 6px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 136px;
+      height: 4.5px;
+      background: var(--theme-status-text);
+      opacity: 0.25;
+      border-radius: 10px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="preview-wrapper">
+    <!-- Info Panel -->
+    <div class="info-panel">
+      <div style="display: flex; align-items: center; gap: 10px;">
+        <span class="badge-ios">iOS Telegram Client</span>
+        <span style="color: #34C759; font-size: 13px; font-weight: 600;">● Live Prototype</span>
+      </div>
+      <h1>Telegram iOS для Android</h1>
+      <p>
+        Полная адаптация дизайна iPhone для Android: нативные закруглённые баблы (18dp), фирменная синяя круглая кнопка отправки со стрелкой вверх (↑), плавные анимации и полупрозрачные панели.
+      </p>
+
+      <ul class="feature-list">
+        <li class="feature-item">
+          <div class="feature-icon">↑</div>
+          <div>
+            <strong>Синяя круглая кнопка отправки</strong>
+            <div style="font-size: 12px; color: #8B949E;">Фирменная стрелочка SF Symbol arrow.up вместо самолётика</div>
+          </div>
+        </li>
+        <li class="feature-item">
+          <div class="feature-icon">💬</div>
+          <div>
+            <strong>iOS Bubble Curvature</strong>
+            <div style="font-size: 12px; color: #8B949E;">Аккуратные хвостики и мягкие скругления углов 18dp</div>
+          </div>
+        </li>
+        <li class="feature-item">
+          <div class="feature-icon">✨</div>
+          <div>
+            <strong>Пружинные анимации (Spring Physics)</strong>
+            <div style="font-size: 12px; color: #8B949E;">Плавное появление сообщений и отзывчивые клики</div>
+          </div>
+        </li>
+      </ul>
+
+      <div class="controls-panel">
+        <button id="themeToggle" class="btn-toggle-theme">
+          <span id="themeIcon">🌙</span> Переключить тёмную/светлую тему
+        </button>
+      </div>
+
+      <div style="background: rgba(88, 166, 255, 0.1); border: 1px solid rgba(88, 166, 255, 0.2); padding: 12px; border-radius: 12px; font-size: 13px; color: #58A6FF; margin-top: 8px;">
+        💡 <strong>Протестируйте прямо сейчас:</strong> Наберите сообщение в поле справа и нажмите синюю кнопку <strong>↑</strong>!
+      </div>
+    </div>
+
+    <!-- iPhone Mockup -->
+    <div class="iphone-frame" id="phoneFrame">
+      <!-- Dynamic Island -->
+      <div class="dynamic-island">
+        <div class="camera-lens"></div>
+        <div style="width: 8px; height: 8px; border-radius: 50%; background: #007AFF;"></div>
+      </div>
+
+      <!-- Status Bar -->
+      <div class="status-bar">
+        <span>9:41</span>
+        <div class="status-icons">
+          <!-- Cellular -->
+          <svg width="17" height="11" viewBox="0 0 17 11" fill="currentColor">
+            <rect x="0" y="7" width="3" height="4" rx="0.8"/>
+            <rect x="4.5" y="5" width="3" height="6" rx="0.8"/>
+            <rect x="9" y="2.5" width="3" height="8.5" rx="0.8"/>
+            <rect x="13.5" y="0" width="3" height="11" rx="0.8"/>
+          </svg>
+          <!-- Wifi -->
+          <svg width="15" height="11" viewBox="0 0 15 11" fill="currentColor">
+            <path d="M7.5 3.5C9.7 3.5 11.7 4.4 13.1 5.9L14.5 4.5C12.7 2.6 10.2 1.5 7.5 1.5C4.8 1.5 2.3 2.6 0.5 4.5L1.9 5.9C3.3 4.4 5.3 3.5 7.5 3.5ZM7.5 7C8.8 7 10 7.5 10.9 8.4L12.3 7C11.1 5.8 9.4 5 7.5 5C5.6 5 3.9 5.8 2.7 7L4.1 8.4C5 7.5 6.2 7 7.5 7ZM7.5 9.5C8.1 9.5 8.5 9.9 8.5 10.5C8.5 11.1 8.1 11.5 7.5 11.5C6.9 11.5 6.5 11.1 6.5 10.5C6.5 9.9 6.9 9.5 7.5 9.5Z"/>
+          </svg>
+          <!-- Battery -->
+          <svg width="24" height="12" viewBox="0 0 24 12" fill="none" stroke="currentColor" stroke-width="1.2">
+            <rect x="1" y="1" width="19" height="10" rx="3"/>
+            <rect x="3" y="3" width="13" height="6" rx="1.5" fill="currentColor"/>
+            <path d="M22 4.5V7.5" stroke-linecap="round"/>
+          </svg>
+        </div>
+      </div>
+
+      <!-- Navigation Bar -->
+      <div class="ios-header">
+        <div class="back-btn">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path d="M15 18L9 12L15 6" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+          <span>Чаты</span>
+          <span class="back-counter">3</span>
+        </div>
+
+        <div class="header-user">
+          <div class="user-name">Павел Дуров</div>
+          <div class="user-status">в сети</div>
+        </div>
+
+        <div class="header-avatar">ПД</div>
+      </div>
+
+      <!-- Chat Canvas -->
+      <div class="chat-body" id="chatBody">
+        <div class="date-badge">Сегодня</div>
+
+        <!-- Incoming message -->
+        <div class="msg-row in">
+          <div class="msg-bubble">
+            Привет! Ты хотел посмотреть, как выглядит клиент Telegram в стиле iOS?
+            <div class="msg-meta">
+              <span>21:00</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Outgoing message -->
+        <div class="msg-row out">
+          <div class="msg-bubble">
+            Да! Особенно интересны скруглённые баблы и та самая синяя кнопка со стрелкой вверх ↑
+            <div class="msg-meta">
+              <span>21:01</span>
+              <span class="checks-icon">
+                <svg viewBox="0 0 16 11"><path d="M1 5.5L5 9.5L14 1M6 9.5L15 1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+              </span>
+            </div>
+          </div>
+          <div class="reaction-pill">🔥 1</div>
+        </div>
+
+        <!-- Incoming message -->
+        <div class="msg-row in">
+          <div class="msg-bubble">
+            Оцени: отправь любое сообщение снизу, чтобы увидеть анимацию и проверить синий кружок отправки в действии!
+            <div class="msg-meta">
+              <span>21:02</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Input Bar -->
+      <div class="ios-input-bar">
+        <button class="btn-attach" title="Attach">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 5V19M5 12H19" stroke-linecap="round"/>
+          </svg>
+        </button>
+
+        <div class="input-field-wrapper">
+          <input type="text" id="msgInput" class="chat-input" placeholder="Сообщение" autocomplete="off" />
+          <button class="btn-stickers">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M8 14C9 16 11 17 12 17C13 17 15 16 16 14" stroke-linecap="round"/>
+              <circle cx="9" cy="9" r="1" fill="currentColor"/>
+              <circle cx="15" cy="9" r="1" fill="currentColor"/>
+            </svg>
+          </button>
+        </div>
+
+        <!-- THE SIGNATURE iOS BLUE ARROW SEND BUTTON -->
+        <button id="sendBtn" class="btn-send-ios" title="Отправить сообщение">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 19V5M5 12L12 5L19 12"/>
+          </svg>
+        </button>
+
+        <div class="home-indicator"></div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const msgInput = document.getElementById('msgInput');
+    const sendBtn = document.getElementById('sendBtn');
+    const chatBody = document.getElementById('chatBody');
+    const themeToggle = document.getElementById('themeToggle');
+    const themeIcon = document.getElementById('themeIcon');
+
+    // Theme Switcher
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark-mode');
+      const isDark = document.body.classList.contains('dark-mode');
+      themeIcon.textContent = isDark ? '☀️' : '🌙';
+    });
+
+    // Send Message Logic
+    function sendMessage() {
+      const text = msgInput.value.trim();
+      if (!text) return;
+
+      const now = new Date();
+      const timeStr = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+      // Create outgoing row
+      const row = document.createElement('div');
+      row.className = 'msg-row out';
+      row.innerHTML = `
+        <div class="msg-bubble">
+          ${escapeHTML(text)}
+          <div class="msg-meta">
+            <span>${timeStr}</span>
+            <span class="checks-icon">
+              <svg viewBox="0 0 16 11"><path d="M1 5.5L5 9.5L14 1M6 9.5L15 1" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </span>
+          </div>
+        </div>
+      `;
+
+      chatBody.appendChild(row);
+      msgInput.value = '';
+      chatBody.scrollTop = chatBody.scrollHeight;
+
+      // Simulate Bot Response
+      setTimeout(() => {
+        const botRow = document.createElement('div');
+        botRow.className = 'msg-row in';
+        botRow.innerHTML = `
+          <div class="msg-bubble">
+            Анимация суперплавная! Бабл получил аутентичное закругление и цвета iOS 📱✨
+            <div class="msg-meta">
+              <span>${timeStr}</span>
+            </div>
+          </div>
+        `;
+        chatBody.appendChild(botRow);
+        chatBody.scrollTop = chatBody.scrollHeight;
+      }, 900);
+    }
+
+    function escapeHTML(str) {
+      return str.replace(/[&<>'"]/g, 
+        tag => ({
+          '&': '&amp;',
+          '<': '&lt;',
+          '>': '&gt;',
+          "'": '&#39;',
+          '"': '&quot;'
+        }[tag] || tag)
+      );
+    }
+
+    sendBtn.addEventListener('click', sendMessage);
+
+    msgInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        sendMessage();
+      }
+    });
+
+    // Dynamic scale pulse when typing
+    msgInput.addEventListener('input', () => {
+      if (msgInput.value.trim().length > 0) {
+        sendBtn.style.transform = 'scale(1.06)';
+      } else {
+        sendBtn.style.transform = 'scale(1)';
+      }
+    });
+  </script>
+</body>
+</html>
