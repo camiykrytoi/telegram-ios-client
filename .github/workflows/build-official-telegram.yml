@@ -1,0 +1,104 @@
+name: Build Official Telegram with iOS UI
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ "main" ]
+
+jobs:
+  build-telegram:
+    name: Build Native Telegram (DrKLO) with iOS Design
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout Our iOS Assets & Scripts
+        uses: actions/checkout@v4
+        with:
+          path: 'custom-ios'
+
+      - name: Set up JDK 17
+        uses: actions/setup-java@v4
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Set up Android SDK & NDK
+        uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-34 build-tools;34.0.0 ndk;26.1.10909125 cmake;3.22.1'
+
+      - name: Clone Official Telegram Android Source
+        run: |
+          echo "📥 Клонируем официальный репозиторий DrKLO/Telegram..."
+          git clone --depth 1 https://github.com/DrKLO/Telegram.git telegram-src
+          cd telegram-src
+          git submodule update --init --depth 1 --recursive || true
+
+      - name: Apply iOS Design Modifications
+        run: |
+          echo "🎨 Внедряем iOS дизайн в исходники Telegram..."
+          
+          # 1. Заменяем иконку кнопки отправки на круглую синюю со стрелкой вверх (↑)
+          cp custom-ios/ios-assets/ic_ab_send.xml telegram-src/TMessagesProj/src/main/res/drawable/ic_ab_send.xml || true
+          cp custom-ios/ios-assets/ic_ab_send.xml telegram-src/TMessagesProj/src/main/res/drawable/ic_send.xml || true
+          
+          # 2. Заменяем шеврон возврата на iOS (<)
+          cp custom-ios/ios-assets/ic_ab_back.xml telegram-src/TMessagesProj/src/main/res/drawable/ic_ab_back.xml || true
+          
+          # 3. Модифицируем радиус скругления баблов сообщений (bubbleRadius = 18dp)
+          SHARED_CFG="telegram-src/TMessagesProj/src/main/java/org/telegram/messenger/SharedConfig.java"
+          if [ -f "$SHARED_CFG" ]; then
+            sed -i 's/public static int bubbleRadius = [0-9]\+;/public static int bubbleRadius = 18;/g' "$SHARED_CFG"
+            echo "✅ Установлен радиус баблов 18dp (iOS curvature)"
+          fi
+          
+          # 4. Копируем тему iOS в ассеты приложения
+          mkdir -p telegram-src/TMessagesProj/src/main/assets/
+          cp custom-ios/ios-assets/ios_light.attheme telegram-src/TMessagesProj/src/main/assets/
+          cp custom-ios/ios-assets/ios_dark.attheme telegram-src/TMessagesProj/src/main/assets/
+
+      - name: Configure Build Target (ARM64)
+        run: |
+          cd telegram-src
+          # Создаем local.properties
+          echo "sdk.dir=$ANDROID_HOME" > local.properties
+          echo "ndk.dir=$ANDROID_HOME/ndk/26.1.10909125" >> local.properties
+
+      - name: Build Official Telegram APK
+        run: |
+          cd telegram-src
+          chmod +x gradlew
+          echo "🔨 Начинаем сборку нативного APK Telegram..."
+          ./gradlew assembleArm64Debug --no-daemon --stacktrace || ./gradlew assembleAfatDebug --no-daemon
+
+      - name: Collect Built APK
+        run: |
+          mkdir -p output_apk
+          find telegram-src -name "*.apk" -exec cp {} output_apk/ \;
+          echo "Найденные APK файлы:"
+          ls -lh output_apk/
+
+      - name: Upload APK to Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: Official-Telegram-iOS-Style-APK
+          path: output_apk/*.apk
+          retention-days: 30
+
+      - name: Publish GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          files: output_apk/*.apk
+          tag_name: "v-official-ios-${{ github.run_number }}"
+          name: "Official Telegram Android with iOS Design (Build ${{ github.run_number }})"
+          body: |
+            ### 📱 Официальный Telegram для Android с модифицированным интерфейсом iOS!
+            - Собрано напрямую из официального репозитория `DrKLO/Telegram`.
+            - 🔵 Круглая синяя кнопка отправки с белой стрелкой вверх (↑).
+            - 💬 Нативные баблы со скруглением углов 18dp.
+            - 🎨 Палитра цветов и шеврон назад в стиле iOS.
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
