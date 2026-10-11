@@ -1,0 +1,14 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- iOS Chevron Back (SF Symbol chevron.backward style) -->
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#007AFF"
+        android:strokeWidth="2.4"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:pathData="M15,19 L8,12 L15,5" />
+</vector>

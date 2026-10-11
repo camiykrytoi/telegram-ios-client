@@ -1,0 +1,8 @@
+{
+  "appId": "org.telegram.ios",
+  "appName": "Telegram iOS",
+  "webDir": "www",
+  "server": {
+    "androidScheme": "https"
+  }
+}
