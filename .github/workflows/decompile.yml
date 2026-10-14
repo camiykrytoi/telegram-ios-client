@@ -1,0 +1,60 @@
+name: Decompile APK with JADX
+
+on:
+  workflow_dispatch:
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up JDK 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '21'
+
+      - name: Install JADX
+        run: |
+          JADX_VER="1.5.0"
+          curl -L "https://github.com/skylot/jadx/releases/download/v$JADX_VER/jadx-$JADX_VER.zip" -o jadx.zip
+          unzip -q jadx.zip -d jadx
+          chmod +x jadx/bin/jadx
+          ./jadx/bin/jadx --version
+
+      - name: Download APK from Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download decompile-input --pattern "*.apk" --repo ${{ github.repository }} --dir .
+          ls -la *.apk
+
+      - name: Decompile APK
+        run: |
+          mkdir -p decompiled_source
+          APK_FILE=$(ls *.apk | head -n 1)
+          echo "Decompiling $APK_FILE..."
+          ./jadx/bin/jadx -d decompiled_source --threads-count 4 --show-bad-code "$APK_FILE"
+          echo "Decompilation complete!"
+
+      - name: Create ZIP Archive of Sources
+        run: |
+          zip -q -r -9 decompiled_sources.zip decompiled_source
+          ls -lh decompiled_sources.zip
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: decompiled-sources
+          path: decompiled_sources.zip
+          retention-days: 7
+
+      - name: Upload to Release
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release upload decompile-input decompiled_sources.zip --clobber --repo ${{ github.repository }}
